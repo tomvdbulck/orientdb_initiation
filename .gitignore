@@ -1,0 +1,41 @@
+# Created by https://www.gitignore.io
+
+### Java ###
+*.class
+
+# Spring
+.springBeans
+
+### Eclipse ###
+.metadata
+bin/
+tmp/
+local.properties
+.settings/
+.classpath
+.project
+target/
+.loadpath
+
+### Intellij ###
+*.iml
+.idea/
+
+### OSX ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+
+### Vagrant ###
+.vagrant/
