@@ -16,6 +16,6 @@ cd orientdb/
 
 sed -i '/<\/users>/i \
 	<user name="root" password="ordina" resources="*"></user>' config/orientdb-server-config.xml
-sed -i "s|YOUR_ORIENTDB_INSTALLATION_PATH|/home/vagrant/orientdb|;s|admin|vagrant|" bin/orientdb.sh
+sed -i "s|YOUR_ORIENTDB_INSTALLATION_PATH|/home/vagrant/orientdb|;s|USER_YOU_WANT_ORIENTDB_RUN_WITH|vagrant|" bin/orientdb.sh
 
 chown -R vagrant.vagrant .
