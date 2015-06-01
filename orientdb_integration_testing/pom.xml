@@ -16,7 +16,6 @@
         <dependency>
             <groupId>be.ordina.orientdb</groupId>
             <artifactId>orientdb_backend</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

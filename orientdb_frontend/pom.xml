@@ -32,6 +32,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>be.ordina.orientdb</groupId>
+            <artifactId>orientdb_backend</artifactId>
+        </dependency>
     </dependencies>
 
 
