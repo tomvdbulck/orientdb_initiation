@@ -19,6 +19,7 @@
     <modules>
         <module>orientdb_backend</module>
         <module>orientdb_frontend</module>
+        <module>orientdb_integration_testing</module>
     </modules>
 
     <properties>
