@@ -3,9 +3,17 @@ package be.ordina.orientdb; /**
  */
 import java.util.Arrays;
 
+import be.ordina.orientdb.conf.ConnectionSettings;
+import be.ordina.service.GraphService;
+import be.ordina.service.GraphServiceImpl;
+import be.ordina.service.TwitterService;
+import be.ordina.service.TwitterServiceImpl;
+import com.tinkerpop.blueprints.Graph;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 
@@ -27,6 +35,25 @@ public class SpringBootApplication {
         }
     }
 
+    @Autowired
+    private ConnectionSettings connectionSettings;
 
+    @Bean
+    public TwitterService twitterServiceBean() {
+        return new TwitterServiceImpl(connectionSettings.getConsumerKey()
+                , connectionSettings.getConsumerSecret()
+                , connectionSettings.getAccessToken()
+                , connectionSettings.getAccessTokenSecret());
+    }
+
+
+    @Bean
+    public GraphService graphServiceBean() throws  Exception{
+
+        GraphService graphService = new GraphServiceImpl();
+        graphService.setupDB();
+
+        return graphService;
+    }
 
 }

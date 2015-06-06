@@ -1,0 +1,6 @@
+# application.yml
+twitterConnection:
+    consumerKey: 1HrWSchAql1Byhqk3izXPjLSa
+    consumerSecret: MTObW6KaWP1rHnaQIiO4d09T3BvSOJ8IQY03cK2ZhxCjQLx9Ou
+    accessToken: 474313291-vXas8qby0TFRs4wm1ryZ3Uzxvt3c1na0KZsvhnUo
+    accessTokenSecret: 5CSvOUUltpsg6KyuBnI6SnDiPNNfTu4yML1OAaP64VVgf

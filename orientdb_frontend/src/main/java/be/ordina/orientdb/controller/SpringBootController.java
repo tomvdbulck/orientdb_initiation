@@ -1,15 +1,21 @@
 package be.ordina.orientdb.controller;
 
+import be.ordina.dto.PersonDTO;
+import be.ordina.service.GraphService;
+import be.ordina.service.TwitterService;
 import org.scribe.builder.ServiceBuilder;
 import org.scribe.builder.api.LinkedInApi;
 import org.scribe.model.*;
 import org.scribe.oauth.OAuthService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.ModelAndView;
+import twitter4j.User;
+
+import javax.swing.*;
+import java.util.List;
 
 /**
  * Created by ToVn on 20/05/15.
@@ -24,6 +30,15 @@ public class SpringBootController {
 
     private static final String INDEX_TEMPLATE = "index";
     private static final String LINKEDIN_RESULTS_TEMPLATE = "linkedinResults";
+
+    private TwitterService twitterService;
+    private GraphService graphService;
+
+    @Autowired
+    public SpringBootController(TwitterService twitterService, GraphService graphService) {
+        this.twitterService = twitterService;
+        this.graphService = graphService;
+    }
 
     @RequestMapping("/")
     public String index() {
@@ -44,11 +59,11 @@ public class SpringBootController {
         Verifier verifier = new Verifier(oauthVerifier);
         Token accessToken = service.getAccessToken(requestToken, verifier);
 // getting user profile
-        OAuthRequest oauthRequest = new OAuthRequest(Verb.GET, "http://api.linkedin.com/v1/people/~:(id,first-name,last-name,industry,headline)");
-        service.signRequest(accessToken, oauthRequest);
-        Response oauthResponse = oauthRequest.send();
-        System.out.println(oauthResponse.getBody());
-
+        OAuthRequest oauthRequestConnections = new OAuthRequest(Verb.GET, "http://api.linkedin.com/v1/people/~/connections:(id,first-name,last-name,industry,headline)");
+        service.signRequest(accessToken, oauthRequestConnections);
+        Response oauthResponseConnections = oauthRequestConnections.send();
+        System.out.println("==========> CONNECTIONS <=========");
+        System.out.println(oauthResponseConnections.getBody());
 
         return LINKEDIN_RESULTS_TEMPLATE;
     }
@@ -64,12 +79,48 @@ public class SpringBootController {
         serviceBuilder.callback("http://127.0.0.1:8080/callback");
         OAuthService service = serviceBuilder.build();
 
-
         System.out.println("going to go to authorization url with callback ");
         requestToken = service.getRequestToken();
 
         // redirect to linkedin auth page
         return "redirect:" + service.getAuthorizationUrl(requestToken);
+    }
+
+    @RequestMapping("twitter")
+    public String getTwitter() {
+        return "twitter";
+    }
+
+
+
+    @RequestMapping("/twitterGet")
+    public String getTwitterConnectionsAndTheirConnections(String userId) {
+
+
+        User startUser = twitterService.getPersonDetails("tomvdbulck");
+        graphService.createPersonIfNotExists(twitterService.transformToPersonDTO(startUser));
+
+        List<Long> connections = twitterService.getConnections("tomvdbulck");
+        for (Long id : connections) {
+
+            twitterService.getPersonDetails(id);
+
+            List<Long> connectionsFromConnection = twitterService.getConnectionsById(id);
+            System.out.println("connections from Connection (" + id + ") ========> " + connectionsFromConnection );
+
+            for (Long connectionId : connectionsFromConnection) {
+                User user = twitterService.getPersonDetails(connectionId);
+
+                PersonDTO person = twitterService.transformToPersonDTO(user);
+                //graphService.createPersonIfNotExists(person);
+            }
+
+            //graphService.addConnectionsToPerson(id, connectionsFromConnection);
+        }
+
+        graphService.addConnectionsToPerson(startUser.getId(), connections);
+
+        return "twitterResults";
 
 
 
