@@ -202,6 +202,7 @@ public class GraphServiceImpl implements  GraphService {
 
             if (personVertex == null) {
                 personVertex = vertex;
+                break;
             }
 
         }
