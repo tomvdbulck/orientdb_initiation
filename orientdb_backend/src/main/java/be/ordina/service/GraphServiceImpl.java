@@ -9,6 +9,7 @@ import com.tinkerpop.blueprints.Vertex;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphFactory;
 import com.tinkerpop.blueprints.impls.orient.OrientGraphNoTx;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.IOException;
 import java.util.List;
 
@@ -18,6 +19,11 @@ import java.util.List;
 public class GraphServiceImpl implements  GraphService {
 
     public static final String TWITTER_CONNECTIONS_DB = "TwitterConnectionsDB";
+    public static final String SCREENNAME = "screenname";
+    public static final String NAME = "name";
+    public static final String DESCRIPTION = "description";
+    public static final String NUMBER_OF_FOLLOWERS = "numberOfFollowers";
+    public static final String TWITTER_ID = "twitterId";
     private OServerAdmin serverAdmin;
 
     private OServerAdmin setup() throws IOException{
@@ -67,9 +73,9 @@ public class GraphServiceImpl implements  GraphService {
             Vertex personVertex = getPerson(person.getTwitterId(), g);
 
             if (personVertex == null) {
-                 g.addVertex("class:person", "twitterId", person.getTwitterId()
-                        , "screenname", person.getScreenName(), "name", person.getName()
-                        , "description", person.getDescription());
+                 g.addVertex("class:person", TWITTER_ID, person.getTwitterId()
+                        , SCREENNAME, person.getScreenName(), NAME, person.getName()
+                        , DESCRIPTION, person.getDescription(), NUMBER_OF_FOLLOWERS, person.getNumberOfFollowers());
             }
         } finally {
             System.out.println("going to close connection");
@@ -80,8 +86,11 @@ public class GraphServiceImpl implements  GraphService {
         }
     }
 
+
+
+
     @Override
-    public void addConnectionsToPerson(Long twitterIdPerson, List<Long> connections) {
+    public void addConnectionToPerson(Long twitterIdPerson, Long connectionId) {
 
 
         final OrientGraphFactory factory = new OrientGraphFactory(
@@ -94,25 +103,31 @@ public class GraphServiceImpl implements  GraphService {
             Vertex personVertex = getPerson(twitterIdPerson, g);
 
             if (personVertex != null) {
-                for (Long connectionId : connections) {
-                    boolean connectionAlready = false;
-                    for (Edge edge : personVertex.getEdges(Direction.OUT, "connection") ){
-                        if(edge.getVertex(Direction.OUT).getProperty("twitterid").equals(connectionId)) {
-                            connectionAlready = true;
-                            break;
-                        }
-                    }
 
-                    if (!connectionAlready) {
-                        //lookup other person
-                        Vertex personWhoMustBecomeAConnection =  getPerson(connectionId, g);
+                boolean connectionAlready = false;
+                for (Edge edge : personVertex.getEdges(Direction.OUT, "connection") ){
 
-                        //create new edge of the connection type
-                        if (personWhoMustBecomeAConnection != null) {
-                            personVertex.addEdge("connection", personWhoMustBecomeAConnection);
-                        }
+                    if(edge.getVertex(Direction.IN).getProperty(TWITTER_ID).equals(connectionId)) {
+
+                        System.out.println(">>>>>>>follower " + connectionId + " is already a connection of " + twitterIdPerson);
+
+                        connectionAlready = true;
+                        break;
                     }
                 }
+
+                if (!connectionAlready) {
+                    //lookup other person
+                    Vertex personWhoMustBecomeAConnection =  getPerson(connectionId, g);
+
+                    //create new edge of the connection type
+                    if (personWhoMustBecomeAConnection != null) {
+                        personVertex.addEdge("connection", personWhoMustBecomeAConnection);
+
+                        System.out.println("created a new connection");
+                    }
+                }
+
             }
         } finally {
             System.out.println("going to close connection");
@@ -123,6 +138,58 @@ public class GraphServiceImpl implements  GraphService {
         }
 
     }
+
+    @Override
+    public PersonDTO getPerson(Long twitterIdPerson) {
+
+        PersonDTO person = null;
+
+        final OrientGraphFactory factory = new OrientGraphFactory(
+                "remote:localhost:2424/" + TWITTER_CONNECTIONS_DB, "admin", "admin");
+
+        try {
+
+            final OrientGraphNoTx g = factory.getNoTx();
+
+            System.out.println("going to look for person with twitter id " + twitterIdPerson);
+
+            Iterable<Vertex> vertices = (Iterable<Vertex>) g.command(
+                    new OCommandSQL("select * from Person where twitterId = " + twitterIdPerson))
+                    .execute();
+
+            Vertex personVertex = null;
+            for (Vertex vertex : vertices) {
+                System.out.println(">>>>>>>>>>>>>>>person found " + vertex.toString());
+                System.out.println("with twitter id = " + vertex.getProperty(TWITTER_ID) + " and name = " + vertex.getProperty(NAME) );
+
+                if (personVertex == null) {
+                    personVertex = vertex;
+                }
+            }
+
+            if (personVertex != null) {
+                person = new PersonDTO((Long)personVertex.getProperty("twitterId"), (String)personVertex.getProperty(SCREENNAME)
+                    , (String)personVertex.getProperty(NAME), (String)personVertex.getProperty(DESCRIPTION)
+                        , (Integer)personVertex.getProperty(NUMBER_OF_FOLLOWERS));
+
+
+                int countOfLinkedFollowers = 0;
+                for (Edge edge : personVertex.getEdges(Direction.OUT, "connection")){
+                   countOfLinkedFollowers++;
+                }
+                person.setLinkedFollowers(countOfLinkedFollowers);
+            }
+        } finally {
+            System.out.println("going to close connection");
+            // this also closes the OrientGraph instances created by the factory
+            // Note that OrientGraphFactory does not implement Closeable
+            factory.close();
+
+        }
+
+        return person;
+    }
+
 
     private Vertex getPerson(Long twitterIdPerson, OrientGraphNoTx g) {
         Iterable<Vertex> vertices = (Iterable<Vertex>) g.command(

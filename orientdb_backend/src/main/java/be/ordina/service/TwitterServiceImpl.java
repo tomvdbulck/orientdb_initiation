@@ -179,7 +179,7 @@ public class TwitterServiceImpl implements TwitterService {
 
 
     public PersonDTO transformToPersonDTO(User user) {
-        return  new PersonDTO(user.getId(), user.getScreenName(), user.getName(), user.getDescription());
+        return  new PersonDTO(user.getId(), user.getScreenName(), user.getName(), user.getDescription(), user.getFollowersCount());
     }
 
 }

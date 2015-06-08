@@ -12,12 +12,17 @@ public class PersonDTO {
     private String name;
     private String description;
 
-    public PersonDTO (Long twitterId, String screenName, String name, String description) {
+    private Integer numberOfFollowers;
+    private Integer linkedFollowers;
+
+    public PersonDTO (Long twitterId, String screenName, String name, String description, Integer numberOfFollowers) {
         this.twitterId = twitterId;
         this.description = description;
         this.name = name;
         this.screenName = screenName;
+        this.numberOfFollowers = numberOfFollowers;
 
+        linkedFollowers = 0;
     }
 
 
@@ -36,4 +41,10 @@ public class PersonDTO {
     public String getDescription() {
         return description;
     }
+
+    public Integer getNumberOfFollowers() {return numberOfFollowers;}
+
+    public void setLinkedFollowers(Integer linkedFollowers) {this.linkedFollowers = linkedFollowers;}
+
+    public Integer getLinkedFollowers() {return linkedFollowers;}
 }

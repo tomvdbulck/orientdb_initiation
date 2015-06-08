@@ -100,27 +100,64 @@ public class SpringBootController {
         User startUser = twitterService.getPersonDetails("tomvdbulck");
         graphService.createPersonIfNotExists(twitterService.transformToPersonDTO(startUser));
 
+        System.out.println("get connections Tom");
         List<Long> connections = twitterService.getConnections("tomvdbulck");
+
+
+        PersonDTO person = twitterService.transformToPersonDTO(twitterService.getPersonDetails(startUser.getId()));
+        System.out.println("followers for Tom is " + person.getNumberOfFollowers() );
+        System.out.print(">>>>>>> already linked is " + person.getLinkedFollowers());
+
         for (Long id : connections) {
+            System.out.println(">>handle connection with id " + id);
 
-            twitterService.getPersonDetails(id);
-
-            List<Long> connectionsFromConnection = twitterService.getConnectionsById(id);
-            System.out.println("connections from Connection (" + id + ") ========> " + connectionsFromConnection );
-
-            for (Long connectionId : connectionsFromConnection) {
-                User user = twitterService.getPersonDetails(connectionId);
-
-                PersonDTO person = twitterService.transformToPersonDTO(user);
-                //graphService.createPersonIfNotExists(person);
+            if (graphService.getPerson(id) == null) {
+                PersonDTO baseConnectionPerson = twitterService.transformToPersonDTO(twitterService.getPersonDetails(id));
+                graphService.createPersonIfNotExists(baseConnectionPerson);
             }
 
-            //graphService.addConnectionsToPerson(id, connectionsFromConnection);
+            System.out.println("going to add " + id  + " to Tom");
+            graphService.addConnectionToPerson(startUser.getId(), id);
         }
 
-        graphService.addConnectionsToPerson(startUser.getId(), connections);
+        for (Long id : connections) {
+            getConnectionsLevel2(id);
+        }
 
         return "twitterResults";
+
+
+
+    }
+
+    private void getConnectionsLevel2(Long id) {
+
+        //check if person is not already connected fully!
+        PersonDTO person = graphService.getPerson(id);
+        System.out.println("going to process " + person.getName() + " with id " + person.getTwitterId());
+        System.out.println("number of followers =  " + person.getNumberOfFollowers() + " of which " + person.getLinkedFollowers()
+                + " have already been linked into the database");
+
+
+        if (person.getNumberOfFollowers() > person.getLinkedFollowers()) {
+            List<Long> connectionsFromConnection = twitterService.getConnectionsById(id);
+            System.out.println("connections from Connection (" + id + ") ========> " + connectionsFromConnection);
+
+            for (Long connectionId : connectionsFromConnection) {
+                if (graphService.getPerson(connectionId) == null) {
+                    User user = twitterService.getPersonDetails(connectionId);
+                    if (user != null) {
+                        graphService.createPersonIfNotExists(twitterService.transformToPersonDTO(user));
+                    }
+
+                }
+
+                if (graphService.getPerson(connectionId) != null) {
+                    graphService.addConnectionToPerson(id, connectionId);
+                }
+
+            }
+        }
 
 
 

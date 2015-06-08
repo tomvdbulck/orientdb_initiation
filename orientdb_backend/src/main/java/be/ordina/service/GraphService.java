@@ -12,7 +12,11 @@ public interface GraphService {
 
     void createPersonIfNotExists(PersonDTO person);
 
-    void addConnectionsToPerson(Long person, List<Long> connections);
+    void addConnectionToPerson(Long person, Long connectionId);
+
+    //void addConnectionsToPerson(Long person, List<Long> connections);
 
     void setupDB() throws IOException;
+
+    PersonDTO getPerson(Long person);
 }
