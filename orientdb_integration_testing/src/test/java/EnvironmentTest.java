@@ -51,7 +51,6 @@ public class EnvironmentTest {
 
             System.out.println("going to add some data");
             final OrientGraphNoTx g = factory.getNoTx();
-            g.getVertexType("woliewolie");
 
             if (g.getVertexType("person") == null) {
                 g.createVertexType("person");

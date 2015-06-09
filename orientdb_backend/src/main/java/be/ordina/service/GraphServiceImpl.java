@@ -104,28 +104,11 @@ public class GraphServiceImpl implements  GraphService {
 
             if (personVertex != null) {
 
-                boolean connectionAlready = false;
-                for (Edge edge : personVertex.getEdges(Direction.OUT, "connection") ){
-
-                    if(edge.getVertex(Direction.IN).getProperty(TWITTER_ID).equals(connectionId)) {
-
-                        System.out.println(">>>>>>>follower " + connectionId + " is already a connection of " + twitterIdPerson);
-
-                        connectionAlready = true;
-                        break;
-                    }
-                }
+                boolean connectionAlready = isAlreadyLinkedToPerson(twitterIdPerson, connectionId, personVertex);
 
                 if (!connectionAlready) {
-                    //lookup other person
-                    Vertex personWhoMustBecomeAConnection =  getPerson(connectionId, g);
+                    addConnectionToPerson(connectionId, g, personVertex);
 
-                    //create new edge of the connection type
-                    if (personWhoMustBecomeAConnection != null) {
-                        personVertex.addEdge("connection", personWhoMustBecomeAConnection);
-
-                        System.out.println("created a new connection");
-                    }
                 }
 
             }
@@ -137,6 +120,33 @@ public class GraphServiceImpl implements  GraphService {
 
         }
 
+    }
+
+    private boolean isAlreadyLinkedToPerson(Long twitterIdPerson, Long connectionId, Vertex personVertex) {
+        boolean connectionAlready = false;
+        for (Edge edge : personVertex.getEdges(Direction.OUT, "connection") ){
+
+            if(edge.getVertex(Direction.IN).getProperty(TWITTER_ID).equals(connectionId)) {
+
+                System.out.println(">>>>>>>follower " + connectionId + " is already a connection of " + twitterIdPerson);
+
+                connectionAlready = true;
+                break;
+            }
+        }
+        return connectionAlready;
+    }
+
+    private void addConnectionToPerson(Long connectionId, OrientGraphNoTx g, Vertex personVertex) {
+        //lookup other person
+        Vertex personWhoMustBecomeAConnection =  getPerson(connectionId, g);
+
+        //create new edge of the connection type
+        if (personWhoMustBecomeAConnection != null) {
+            personVertex.addEdge("connection", personWhoMustBecomeAConnection);
+
+            System.out.println("created a new connection");
+        }
     }
 
     @Override
@@ -168,16 +178,7 @@ public class GraphServiceImpl implements  GraphService {
             }
 
             if (personVertex != null) {
-                person = new PersonDTO((Long)personVertex.getProperty("twitterId"), (String)personVertex.getProperty(SCREENNAME)
-                    , (String)personVertex.getProperty(NAME), (String)personVertex.getProperty(DESCRIPTION)
-                        , (Integer)personVertex.getProperty(NUMBER_OF_FOLLOWERS));
-
-
-                int countOfLinkedFollowers = 0;
-                for (Edge edge : personVertex.getEdges(Direction.OUT, "connection")){
-                   countOfLinkedFollowers++;
-                }
-                person.setLinkedFollowers(countOfLinkedFollowers);
+                person = transformPersonVertexToDTO(personVertex);
             }
         } finally {
             System.out.println("going to close connection");
@@ -187,6 +188,21 @@ public class GraphServiceImpl implements  GraphService {
 
         }
 
+        return person;
+    }
+
+    private PersonDTO transformPersonVertexToDTO(Vertex personVertex) {
+        PersonDTO person;
+        person = new PersonDTO((Long)personVertex.getProperty("twitterId"), (String)personVertex.getProperty(SCREENNAME)
+            , (String)personVertex.getProperty(NAME), (String)personVertex.getProperty(DESCRIPTION)
+                , (Integer)personVertex.getProperty(NUMBER_OF_FOLLOWERS));
+
+
+        int countOfLinkedFollowers = 0;
+        for (Edge edge : personVertex.getEdges(Direction.OUT, "connection")){
+           countOfLinkedFollowers++;
+        }
+        person.setLinkedFollowers(countOfLinkedFollowers);
         return person;
     }
 
